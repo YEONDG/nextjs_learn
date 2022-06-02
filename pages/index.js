@@ -1,34 +1,18 @@
-import MeetupList from "../components/meetups/MeetupList";
-
-const DUMMY_MEETUPS = [
-  {
-    id: "m1",
-    title: "soccer",
-    image:
-      "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMjA1MDZfMzkg%2FMDAxNjUxODM0MjMwNzEz.6lNWud5bZUNjT6UGMGXCu-f-2hQSIiiypvhjZ05WR80g.uJBS5g_gANS1Hie9vQhQvpAsDa7eGW29Z7nmGKONkHgg.JPEG.kmseo12%2F20220505%25A3%25DF171634.jpg&type=sc960_832",
-    address: "some address 1",
-    description: "this is first meetup",
-  },
-  {
-    id: "m2",
-    title: "two",
-    image:
-      "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMjA1MDZfMzkg%2FMDAxNjUxODM0MjMwNzEz.6lNWud5bZUNjT6UGMGXCu-f-2hQSIiiypvhjZ05WR80g.uJBS5g_gANS1Hie9vQhQvpAsDa7eGW29Z7nmGKONkHgg.JPEG.kmseo12%2F20220505%25A3%25DF171634.jpg&type=sc960_832",
-    address: "some address 2",
-    description: "this is two meetup",
-  },
-  {
-    id: "m3",
-    title: "three",
-    image:
-      "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMjA1MDZfMzkg%2FMDAxNjUxODM0MjMwNzEz.6lNWud5bZUNjT6UGMGXCu-f-2hQSIiiypvhjZ05WR80g.uJBS5g_gANS1Hie9vQhQvpAsDa7eGW29Z7nmGKONkHgg.JPEG.kmseo12%2F20220505%25A3%25DF171634.jpg&type=sc960_832",
-    address: "some address 3",
-    description: "this is three meetup",
-  },
-];
+import { Fragment } from 'react';
+import Head from 'next/head';
+import { MongoClient } from 'mongodb';
+import MeetupList from '../components/meetups/MeetupList';
 
 function HomePage(props) {
-  return <MeetupList meetups={props.meetups} />;
+  return (
+    <Fragment>
+      <Head>
+        <title>React Meetups</title>
+        <meta name="description" content="Browse a huge"></meta>
+      </Head>
+      <MeetupList meetups={props.meetups} />
+    </Fragment>
+  );
 }
 
 // export async function getServerSideProps(context) {
@@ -46,9 +30,25 @@ function HomePage(props) {
 export async function getStaticProps() {
   // 서버에서만 돌아가는 코드
   // fetch data from an API
+  const client = await MongoClient.connect(
+    'mongodb+srv://ydg:Q0qN4QQ2LKMQamOl@cluster0.9au98.mongodb.net/meetup?retryWrites=true&w=majority'
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection('meetups');
+
+  const meetups = await meetupsCollection.find().toArray();
+
+  client.close();
+
   return {
     props: {
-      meetups: DUMMY_MEETUPS,
+      meetups: meetups.map((meetup) => ({
+        title: meetup.title,
+        address: meetup.address,
+        image: meetup.image,
+        id: meetup._id.toString(),
+      })),
     },
     revalidate: 1,
   };
